@@ -4,13 +4,13 @@
 #include <string.h>
 #include <util/delay.h>
 
-static char tcp_rx_buffer[256];
+static char tcp_rx_buffer[700];
 static volatile bool tcp_received = false;
 
 // ================= CALLBACK =================
 static void tcp_callback(void)
 {
-    printf("\n--- SERVER RESPONSE ---\n%s\n------------------------\n", tcp_rx_buffer);
+    //printf("\n--- SERVER RESPONSE ---\n%s\n------------------------\n", tcp_rx_buffer);
     tcp_received = true;
 }
 
@@ -25,11 +25,11 @@ void network_init(void)
 
     if (wifi_command_join_AP("Namnam", "Benjamin") != WIFI_OK)
     {
-        printf("WiFi failed\n");
+        printf("[NETWORK/WiFi] ERROR - Failed to join 'Namnam'\n");
         return;
     }
 
-    printf("WiFi connected!\n");
+    printf("[NETWORK/WiFi] Connected successfully: Namnam\n");
 
     wifi_command_set_to_single_Connection();
 }
@@ -40,14 +40,12 @@ void send_sensor_data(sensor_data_t *data)
     tcp_received = false;
     memset(tcp_rx_buffer, 0, sizeof(tcp_rx_buffer));
 
-   
     if (wifi_command_create_TCP_connection("webhook.site", 80, tcp_callback, tcp_rx_buffer) != WIFI_OK)
     {
-        printf("TCP connection failed\n");
+        printf("[NETWORK/TCP] ERROR - Connection setup failed \n");
         return;
     }
-
-    printf("TCP connected\n");
+    printf("[NETWORK/TCP] Connected - Ready to send data\n");
 
     _delay_ms(500);
 
@@ -62,7 +60,7 @@ void send_sensor_data(sensor_data_t *data)
     // ================= HTTP REQUEST =================
     char request[300];
     sprintf(request,
-            "POST /08ebc290-d248-4537-90e4-de922467ec15 HTTP/1.1\r\n"
+            "POST /09064a39-2237-40ed-8c7c-b888b02db8a4 HTTP/1.1\r\n"
             "Host: webhook.site\r\n"
             "Content-Type: application/json\r\n"
             "Content-Length: %d\r\n"
@@ -75,12 +73,12 @@ void send_sensor_data(sensor_data_t *data)
     // ================= SEND =================
     if (wifi_command_TCP_transmit((uint8_t *)request, strlen(request)) != WIFI_OK)
     {
-        printf("POST failed\n");
+        printf("[NETWORK/HTTP] ERROR - POST transmission failed (buffer overflow?)\n");
         wifi_command_close_TCP_connection();
         return;
     }
 
-    printf("POST sent!\n");
+    printf("[NETWORK/HTTP] SUCCESS - POST sent (waiting for response)\n");
 
     // ================= WAIT FOR RESPONSE =================
     int timeout = 0;
@@ -93,11 +91,15 @@ void send_sensor_data(sensor_data_t *data)
 
     if (!tcp_received)
     {
-        printf("No response from server\n");
+        printf("[NETWORK/HTTP] WARNING - Server response timeout (waited 5s, got no reply)\n");
     }
+    else
+{
+    printf("[NETWORK/HTTP] SUCCESS - Response received\n");
+}
 
     // ================= CLOSE =================
     wifi_command_close_TCP_connection();
 
-    printf("Connection closed\n\n");
+    printf("[NETWORK/HTTP] SUCCESS - Data transmitted and connection closed\n");
 }
