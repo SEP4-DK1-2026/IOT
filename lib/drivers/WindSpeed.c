@@ -28,10 +28,10 @@ unsigned long WindSpeed_getClicks(void)
     return c;
 }
 
-float WindSpeed_getKmh(float seconds)
+float WindSpeed_getMS(float seconds)
 {
     float hz = WindSpeed_getClicks() / seconds;
-    float kmh = hz * 2.4f;   
+    float ms = hz * 0.6667f;
     WindSpeed_reset();
-    return kmh;
+    return ms;
 }
