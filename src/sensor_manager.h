@@ -7,6 +7,9 @@ typedef struct {
     uint8_t hum_i;
     uint8_t hum_d;
     uint16_t light;
+    float rain;
+    float wind_speed;
+    uint8_t wind_dir;
 } sensor_data_t;
 
 void sensors_init(void);
