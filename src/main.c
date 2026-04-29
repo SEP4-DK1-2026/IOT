@@ -5,7 +5,6 @@
 #include <uart_stdio.h>
 #include "sleep_timer.h"
 #include <stdlib.h>
-#include <time.h>
 
 #include "sensor_manager.h"
 #include "network.h"
@@ -33,17 +32,14 @@ int main(void)
         sensors_read_all(&data);
   char rainnum[10];
     char wind_speed_num[10];
-    time_t seconds;
-    ;
 dtostrf(data.rain, 6, 2,rainnum);
-        printf("[SENSOR] Reading - Temp: %d.%d°C Humidity: %d.%d Lux: %d Rainfall: %s Windspeed: %s Winddirriction: %d time: %ld\n",
+        printf("[SENSOR] Reading - Temp: %d.%d°C Humidity: %d.%d Lux: %d Rainfall: %s Windspeed: %s Winddirriction: %d",
                data.temp_i, data.temp_d,
                data.hum_i, data.hum_d,
                data.light,
                rainnum,
               wind_speed_num,
-               data.wind_dir,
-            time(&seconds));
+               data.wind_dir);
 
         send_sensor_data(&data);
 

@@ -4,7 +4,6 @@
 #include <string.h>
 #include <util/delay.h>
 #include <stdlib.h> 
-#include <time.h>
 
 static char tcp_rx_buffer[700];
 static volatile bool tcp_received = false;
@@ -55,19 +54,17 @@ void send_sensor_data(sensor_data_t *data)
     char json[128];
     char rain_num[10];
     char wind_speed_num[10];
-    time_t seconds;
     
 dtostrf(data->rain, 6, 2,rain_num);
 dtostrf(data->wind_speed,6,2,wind_speed_num);
     sprintf(json,
-            "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%d, \"rainfall\":%s, \"windspeed\":%s, \"winddir\":%d \"time\" :%ld}",
+            "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%d, \"rainfall\":%s, \"windspeed\":%s, \"winddir\":%d}",
             data->temp_i, data->temp_d,
             data->hum_i, data->hum_d,
             data->light,
             rain_num,
             wind_speed_num,
-            data->wind_dir,
-       time(&seconds));
+            data->wind_dir);
 
     // ================= HTTP REQUEST =================
     char request[300];
