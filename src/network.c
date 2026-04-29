@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <util/delay.h>
+#include <stdlib.h> 
+#include <time.h>
 
 static char tcp_rx_buffer[256];
 static volatile bool tcp_received = false;
@@ -40,7 +42,6 @@ void send_sensor_data(sensor_data_t *data)
     tcp_received = false;
     memset(tcp_rx_buffer, 0, sizeof(tcp_rx_buffer));
 
-   
     if (wifi_command_create_TCP_connection("webhook.site", 80, tcp_callback, tcp_rx_buffer) != WIFI_OK)
     {
         printf("TCP connection failed\n");
@@ -53,16 +54,26 @@ void send_sensor_data(sensor_data_t *data)
 
     // ================= JSON =================
     char json[128];
+    char rain_num[10];
+    char wind_speed_num[10];
+    time_t seconds;
+    
+dtostrf(data->rain, 6, 2,rain_num);
+dtostrf(data->wind_speed,6,2,wind_speed_num);
     sprintf(json,
-            "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%d}",
+            "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%d, \"rainfall\":%s, \"windspeed\":%s, \"winddir\":%d \"time\" :%ld}",
             data->temp_i, data->temp_d,
             data->hum_i, data->hum_d,
-            data->light);
+            data->light,
+            rain_num,
+            wind_speed_num,
+            data->wind_dir,
+       time(&seconds));
 
     // ================= HTTP REQUEST =================
     char request[300];
     sprintf(request,
-            "POST /08ebc290-d248-4537-90e4-de922467ec15 HTTP/1.1\r\n"
+            "POST /c97f22b4-c6aa-4c7f-9995-06bfada98772 HTTP/1.1\r\n"
             "Host: webhook.site\r\n"
             "Content-Type: application/json\r\n"
             "Content-Length: %d\r\n"
