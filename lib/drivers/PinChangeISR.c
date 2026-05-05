@@ -11,8 +11,11 @@ volatile uint8_t ws_last = 1;
 
 ISR(PCINT2_vect)
 {
-    uint8_t pins = PINK;
+    handlePinChange(PINK);
+}
 
+void handlePinChange(uint8_t pins)
+{
     uint8_t r = (pins & (1 << PK0)) ? 1 : 0;
     uint8_t w = (pins & (1 << PK1)) ? 1 : 0;
 
