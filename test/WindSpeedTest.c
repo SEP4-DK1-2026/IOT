@@ -11,7 +11,9 @@ static void simulateWindClick(void)
 }
 
 void setUp() {
+    rg_tips = 0;
     ws_clicks = 0;
+    rg_last = 1;
     ws_last = 1;
 }
 
