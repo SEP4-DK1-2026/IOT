@@ -1,28 +1,111 @@
-#include <unity.h>
-#include "WindSpeed.h"
-#include "SharedWeather.h"
+#include "unity.h"
+#include "weathermath.h"
 
-void handlePinChange(uint8_t pins);
-
-static void simulateWindClick(void)
-{
-    handlePinChange((1 << PK0) | (1 << PK1));
-    handlePinChange(1 << PK0);
-}
+float WindGetKmh(float tips, float seconds);
 
 void setUp() {
-    rg_tips = 0;
-    ws_clicks = 0;
-    rg_last = 1;
-    ws_last = 1;
 }
 
 void tearDown() {
-
 }
 
-//Different Tests
+void TestWindSpeedNoClick0Seconds(){
+    int tips = 0;
+    int seconds = 0;
+    float kmh = WindGetKmh(tips, seconds);
+    TEST_ASSERT_TRUE(isnan(kmh));
+}
 
-int main() {
+void TestWindSpeedNoClick5Seconds(){
+    int tips = 0;
+    int seconds = 5;
+    float kmh = WindGetKmh(tips, seconds);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0000f, kmh);
+}
 
+void TestWindSpeedNoClick10Seconds(){
+    int tips = 0;
+    int seconds = 10;
+    float kmh = WindGetKmh(tips, seconds);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0000f, kmh);
+}
+
+void TestWindSpeedOneClick0Seconds(){
+    int tips = 1;
+    int seconds = 0;
+    float kmh = WindGetKmh(tips, seconds);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0000f, kmh);
+}
+
+void TestWindSpeedOneClick5Seconds(){
+    int tips = 1;
+    int seconds = 5;
+    float kmh = WindGetKmh(tips, seconds);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.4800f, kmh);
+}
+
+void TestWindSpeedOneClick10Seconds(){
+    int tips = 1;
+    int seconds = 10;
+    float kmh = WindGetKmh(tips, seconds);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.2400f, kmh);
+}
+
+void TestWindSpeedFiveClicks0Seconds(){
+    int tips = 5;
+    int seconds = 0;
+    float kmh = WindGetKmh(tips, seconds);
+    TEST_ASSERT_FLOAT_IS_INF(kmh);
+}
+
+void TestWindSpeedFiveClicks5Seconds(){
+    int tips = 5;
+    int seconds = 5;
+    float kmh = WindGetKmh(tips, seconds);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 2.4000f, kmh);
+}
+
+void TestWindSpeedFiveClicks10Seconds(){
+    int tips = 5;
+    int seconds = 10;
+    float kmh = WindGetKmh(tips, seconds);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 1.2000f, kmh);
+}
+
+void TestWindSpeedTenClicks0Seconds(){
+    int tips = 10;
+    int seconds = 0;
+    float kmh = WindGetKmh(tips, seconds);
+    TEST_ASSERT_FLOAT_IS_INF(kmh);
+}
+
+void TestWindSpeedTenClicks5Seconds(){
+    int tips = 10;
+    int seconds = 5;
+    float kmh = WindGetKmh(tips, seconds);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 4.8000f, kmh);
+}
+
+void TestWindSpeedTenClicks10Seconds(){
+    int tips = 10;
+    int seconds = 10;
+    float kmh = WindGetKmh(tips, seconds);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, 2.4000f, kmh);
+}
+
+int main()
+{
+    UNITY_BEGIN();
+
+    RUN_TEST(TestWindSpeedNoClick0Seconds);
+    RUN_TEST(TestWindSpeedNoClick5Seconds);
+    RUN_TEST(TestWindSpeedNoClick10Seconds);
+    RUN_TEST(TestWindSpeedFiveClicks0Seconds);
+    RUN_TEST(TestWindSpeedFiveClicks5Seconds);
+    RUN_TEST(TestWindSpeedFiveClicks10Seconds);
+    RUN_TEST(TestWindSpeedTenClicks0Seconds);
+    RUN_TEST(TestWindSpeedTenClicks5Seconds);
+    RUN_TEST(TestWindSpeedTenClicks10Seconds);
+
+    return UNITY_END();
 }
