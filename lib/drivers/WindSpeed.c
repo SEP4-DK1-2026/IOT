@@ -33,7 +33,7 @@ unsigned long WindSpeed_getClicks(void)
 
 float WindSpeed_getKmh(float seconds)
 {
-    kmh = WindGetKmh(WindSpeed_getClicks(), seconds);
+    float kmh = WindGetKmh(WindSpeed_getClicks(), seconds);
     WindSpeed_reset();
     return kmh;
 }
