@@ -6,7 +6,7 @@
 void WindSpeed_init(void);
 void WindSpeed_reset(void);
 unsigned long WindSpeed_getClicks(void);
-float WindSpeed_getKMH(float seconds);
+float WindSpeed_getKmh(float seconds);
 
 
 #endif
