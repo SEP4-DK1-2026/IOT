@@ -2,6 +2,9 @@
 #include "SharedWeather.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include "weathermath.h"
+
+float RainGetMM(int tips);
 
 void RainGauge_init(void)
 {
@@ -30,7 +33,7 @@ unsigned long RainGauge_getTips(void)
 
 float RainGauge_getMM(void)
 {
-    float mm = RainGauge_getTips() * 0.2794f;
+    float mm = RainGetMM(RainGauge_getTips());
     RainGauge_reset();
     return mm;
 }

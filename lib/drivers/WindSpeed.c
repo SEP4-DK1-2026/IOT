@@ -2,6 +2,9 @@
 #include "SharedWeather.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include "weathermath.h"
+
+float WindGetKmh(float tips, float seconds);
 
 void WindSpeed_init(void)
 {
@@ -30,8 +33,7 @@ unsigned long WindSpeed_getClicks(void)
 
 float WindSpeed_getMS(float seconds)
 {
-    float hz = WindSpeed_getClicks() / seconds;
-    float ms = hz * 0.6667f;
+    float kmh = WindGetKmh(WindSpeed_getClicks(), seconds);
     WindSpeed_reset();
     return ms;
 }
