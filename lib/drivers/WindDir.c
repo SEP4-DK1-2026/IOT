@@ -1,94 +1,74 @@
 #include "WindDir.h"
 #include <avr/io.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <util/delay.h>
 
-#define WINDDIR_CHANNEL 10
+// #define WINDDIR_CHANNEL 10
+#define WINDDIR_PK_CHANNEL 2
 #define WINDDIR_COUNT 16
 
+#define WINDDIR_ADC_MIN_VALID 70
+#define WINDDIR_ADC_MAX_VALID 970
+#define WINDDIR_ADC_STUCK_HIGH 1015
+#define WINDDIR_ADC_STUCK_LOW 3
+#define WINDDIR_FILTER_SAMPLES 7
+#define WINDDIR_HYSTERESIS 0
+
+// Forward declarations for internal helpers
+static uint16_t absDiffU16(uint16_t a, uint16_t b);
+static uint8_t WindDir_findNearestIndex(uint16_t adc);
+static uint8_t WindDir_getIndex(void);
+
 static const uint16_t windDirADC[WINDDIR_COUNT] = {
-    950,  // N
-    880,  // NNE
-    800,  // NE
-    700,  // ENE
-    600,  // E
-    520,  // ESE
-    450,  // SE
-    380,  // SSE
-    320,  // S
-    280,  // SSW
-    240,  // SW
-    200,  // WSW
-    160,  // W
-    120,  // WNW
-    80,   // NW
-    40    // NNW
+    238, // 0°
+    617, // 22.5°
+    562, // 45°
+    940, // 67.5°
+    930, // 90°
+    957, // 112.5°
+    838, // 135°
+    896, // 157.5°
+    736, // 180°
+    779, // 202.5°
+    393, // 225°
+    424, // 247.5°
+    79,  // 270°
+    196, // 292.5°
+    136, // 315°
+    321  // 337.5°
 };
+
+static uint16_t cached_adc = 0;
+static uint8_t cached_index = 0;
+static uint8_t cache_valid = 0;
+
 
 static void WindDir_selectChannel(void)
 {
-    uint8_t channel = WINDDIR_CHANNEL;
-
-    ADMUX  = (ADMUX & 0xF0) | (channel & 0x0F);
-
-    if (channel > 7)
-        ADCSRB |= (1 << MUX5);
-    else
-        ADCSRB &= ~(1 << MUX5);
+    ADCSRB |= (1 << MUX5);                                // select ADC8..ADC15 bank
+    ADMUX = (ADMUX & 0xE0) | (WINDDIR_PK_CHANNEL & 0x07); // MUX[4:0] = 0..7
 }
 
 void WindDir_init(void)
 {
-    ADMUX = (1 << REFS0);        // AVCC reference
+    // PK2 / ADC10 as analog input, no internal pull-up
+    DDRK &= ~(1 << PK2);
+    PORTK &= ~(1 << PK2);
 
-    DIDR2 |= (1 << ADC10D);      // disable digital input
+    ADMUX = (1 << REFS0); // AVCC reference
 
-    ADCSRB &= ~(1 << MUX5);      // clean state
+    DIDR2 |= (1 << ADC10D); // disable digital input
+
+    ADCSRB &= ~(1 << MUX5); // clean state
 
     ADCSRA =
-        (1 << ADEN)  |           // enable ADC
+        (1 << ADEN) | // enable ADC
         (1 << ADPS2) |
         (1 << ADPS1) |
-        (1 << ADPS0);            // prescaler 128
+        (1 << ADPS0); // prescaler 128
 }
 
-uint16_t WindDir_getADC(void)
-{
-    WindDir_selectChannel();
-
-    ADCSRA |= (1 << ADSC);
-    while (ADCSRA & (1 << ADSC));
-
-    ADCSRA |= (1 << ADSC);
-    while (ADCSRA & (1 << ADSC));
-
-    return ADC;
-}
-
-uint8_t WindDir_getIndex(void)
-{
-    uint16_t adc = WindDir_getADC();
-
-    uint16_t bestDiff = 0xFFFF;
-    uint8_t bestIndex = 0;
-
-    for (uint8_t i = 0; i < WINDDIR_COUNT; i++)
-    {
-        uint16_t diff;
-
-        if (adc > windDirADC[i])
-            diff = adc - windDirADC[i];
-        else
-            diff = windDirADC[i] - adc;
-
-        if (diff < bestDiff)
-        {
-            bestDiff = diff;
-            bestIndex = i;
-        }
-    }
-
-    return bestIndex;
-}
 
 uint16_t WindDir_getDeg(void)
 {
@@ -98,11 +78,112 @@ uint16_t WindDir_getDeg(void)
 const char *WindDir_getText(void)
 {
     static const char *dirs[WINDDIR_COUNT] = {
-        "N","NNE","NE","ENE",
-        "E","ESE","SE","SSE",
-        "S","SSW","SW","WSW",
-        "W","WNW","NW","NNW"
-    };
+        "N", "NNE", "NE", "ENE",
+        "E", "ESE", "SE", "SSE",
+        "S", "SSW", "SW", "WSW",
+        "W", "WNW", "NW", "NNW"};
 
     return dirs[WindDir_getIndex()];
+}
+
+
+void WindDir_resetCache(void)
+{
+    cache_valid = 0;
+}
+
+uint16_t WindDir_getCachedADC(void)
+{
+    if (!cache_valid)
+        (void)WindDir_getIndex();
+    return cached_adc;
+}
+
+static uint16_t absDiffU16(uint16_t a, uint16_t b)
+{
+    return (a > b) ? (a - b) : (b - a);
+}
+
+static uint8_t WindDir_findNearestIndex(uint16_t adc)
+{
+    uint16_t bestDiff = 0xFFFF;
+    uint8_t bestIndex = 0;
+
+    for (uint8_t i = 0; i < WINDDIR_COUNT; i++)
+    {
+        uint16_t diff = absDiffU16(adc, windDirADC[i]);
+        if (diff < bestDiff)
+        {
+            bestDiff = diff;
+            bestIndex = i;
+        }
+    }
+    return bestIndex;
+}
+
+uint16_t WindDir_getADC(void)
+{
+    WindDir_selectChannel();
+
+    // Let MUX settle and discard first conversion
+    _delay_us(20);
+    ADCSRA |= (1 << ADSC);
+    while (ADCSRA & (1 << ADSC))
+    {
+    }
+
+    uint32_t sum = 0;
+    for (uint8_t i = 0; i < WINDDIR_FILTER_SAMPLES; i++)
+    {
+        ADCSRA |= (1 << ADSC);
+        while (ADCSRA & (1 << ADSC))
+        {
+        }
+        sum += ADC;
+        _delay_us(120);
+    }
+
+    return (uint16_t)((sum + (WINDDIR_FILTER_SAMPLES / 2)) / WINDDIR_FILTER_SAMPLES);
+}
+
+uint8_t WindDir_getIndex(void)
+{
+    if (!cache_valid) // Første gang: cache_valid = 0
+    {
+        uint16_t adc = WindDir_getADC(); // ← Læs fra ADC
+        cached_adc = adc;
+
+        // Detect obvious electrical fault (open wire, wrong channel, no GND, short)
+        if (adc >= WINDDIR_ADC_STUCK_HIGH || adc <= WINDDIR_ADC_STUCK_LOW)
+        {
+            cache_valid = 1;            // "Nu har jeg data"
+            printf("[WARN] winddir invalid raw=%u (stuck high/low), keep index=%u\r\n",
+                   adc, cached_index);
+            return cached_index;
+        }
+
+        // Clamp to calibrated span before nearest-match
+        if (adc < WINDDIR_ADC_MIN_VALID)
+            adc = WINDDIR_ADC_MIN_VALID;
+        if (adc > WINDDIR_ADC_MAX_VALID)
+            adc = WINDDIR_ADC_MAX_VALID;
+
+        uint8_t newIndex = WindDir_findNearestIndex(adc);
+
+        // Small hysteresis so it does not jump between adjacent sectors from noise
+        uint16_t prevDiff = absDiffU16(adc, windDirADC[cached_index]);
+        uint16_t newDiff = absDiffU16(adc, windDirADC[newIndex]);
+        if ((newDiff + WINDDIR_HYSTERESIS) >= prevDiff)
+        {
+            newIndex = cached_index;
+        }
+
+        cached_index = newIndex;
+        cache_valid = 1;
+
+        printf("[DEBUG] winddir raw=%u idx=%u ref=%u\r\n",
+               cached_adc, cached_index, windDirADC[cached_index]);
+    }
+
+    return cached_index;            // Anden gang: bare returner det gamle
 }

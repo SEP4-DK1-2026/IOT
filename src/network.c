@@ -11,7 +11,6 @@ static volatile bool tcp_received = false;
 // ================= CALLBACK =================
 static void tcp_callback(void)
 {
-    //printf("\n--- SERVER RESPONSE ---\n%s\n------------------------\n", tcp_rx_buffer);
     tcp_received = true;
 }
 
@@ -69,7 +68,7 @@ dtostrf(data->wind_speed,6,2,wind_speed_num);
     // ================= HTTP REQUEST =================
     char request[300];
     sprintf(request,
-            "POST /09064a39-2237-40ed-8c7c-b888b02db8a4 HTTP/1.1\r\n"
+            "POST /b2e0de2e-1dbe-4a3c-b7ee-50214c4d4c05 HTTP/1.1\r\n"
             "Host: webhook.site\r\n"
             "Content-Type: application/json\r\n"
             "Content-Length: %d\r\n"
@@ -92,7 +91,7 @@ dtostrf(data->wind_speed,6,2,wind_speed_num);
     // ================= WAIT FOR RESPONSE =================
     int timeout = 0;
 
-    while (!tcp_received && timeout < 50)
+    while (!tcp_received && timeout < 20) // Vent 5 sekunder (20 * 250ms)
     {
         _delay_ms(100);
         timeout++;
@@ -100,7 +99,7 @@ dtostrf(data->wind_speed,6,2,wind_speed_num);
 
     if (!tcp_received)
     {
-        printf("[NETWORK/HTTP] WARNING - Server response timeout (waited 5s, got no reply)\n");
+        printf("[NETWORK/HTTP] WARNING - Server response timeout (waited 2s, got no reply)\n");
     }
     else
 {
