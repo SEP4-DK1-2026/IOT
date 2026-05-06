@@ -2,6 +2,9 @@
 #include "SharedWeather.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include "weathermath.h"
+
+float WindGetKmh(float tips, float seconds);
 
 //Windspeed og raingauge init er næsten ens kodemæssigt, kan man lave en fælles funktion?
 void WindSpeed_init(void)
@@ -38,10 +41,14 @@ unsigned long WindSpeed_getClicks(void)
     return c;
 }
 
-float WindSpeed_getKmh(float seconds)
+float WindSpeed_getKMH(float seconds)
 {
+<<<<<<< FEATURE/Makeing-full-package
     float hz = WindSpeed_getClicks() / seconds;
     float kmh = hz * 2.4f;
+=======
+    float kmh = WindGetKmh(WindSpeed_getClicks(), seconds);
+>>>>>>> main
     WindSpeed_reset();
     return kmh;
 }

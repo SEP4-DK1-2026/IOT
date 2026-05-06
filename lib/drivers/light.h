@@ -23,3 +23,4 @@ ADC_Error_t light_init();
 // Returns a value between 0 and 1023 (10-bit resolution).
 // Low values = dark, high values = bright.
 uint16_t light_measure_raw();
+float light_measure_lux();
