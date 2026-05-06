@@ -1,5 +1,6 @@
 #include <avr/sleep.h>
 #include <avr/wdt.h>
+#include <avr/io.h>
 #include "sleep_timer.h"
 #include <avr/interrupt.h>
 #include <stdio.h>
@@ -27,13 +28,23 @@ void sleep_timer_init(void)
     WDTCSR = (1 << WDIE) | (1 << WDP3);
 }
 
+static void uart0_wait_tx_complete(void)
+{
+    fflush(stdout);
+    while (!(UCSR0A & (1 << TXC0))) { }
+    UCSR0A |= (1 << TXC0);
+}
+
+
 void sleep_interval(void)
 {
     wakeups = 0;
 
-    while (wakeups != 10) // 112 * 8 sek = 896 sek = ca 15 min
+    while (wakeups != 2) // 112 * 8 sek = 896 sek = ca 15 min
     {
-        printf("[SLEEP] Entering low-power mode (cycle 0/10)\n");
+        printf("[SLEEP] Entering low-power mode (cycle %u/2)\n", wakeups);
+        uart0_wait_tx_complete();
+
         set_sleep_mode(SLEEP_MODE_PWR_DOWN);
         sleep_enable();
         sleep_mode(); // Slukker CPU

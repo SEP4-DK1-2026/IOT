@@ -10,9 +10,17 @@ void RainGauge_init(void)
 {
     DDRK &= ~(1 << PK0);
     PORTK |= (1 << PK0);
+    /* Ensure digital input enabled on PK0 (ADC8) so PCINT works */
+    DIDR2 &= ~(1 << ADC8D);
+
+    /* Sync edge detector with the actual pin level to avoid false startup tip. */
+    rg_last = (PINK & (1 << PK0)) ? 1 : 0;
+
+    /* Clear pending pin-change interrupt flag before enabling mask. */
+    PCIFR |= (1 << PCIF2);
 
     PCICR |= (1 << PCIE2);
-    PCMSK2 |= (1 << PCINT16); 
+    PCMSK2 |= (1 << PCINT16);
 }
 
 void RainGauge_reset(void)

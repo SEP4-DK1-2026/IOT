@@ -4,9 +4,13 @@
 #include <stdio.h>
 #include <uart_stdio.h>
 #include "sleep_timer.h"
+#include <stdlib.h>
 
 #include "sensor_manager.h"
 #include "network.h"
+#include "RainGauge.h"
+#include "WindSpeed.h"
+#include "WindDir.h"
 
 int main(void)
 {
@@ -17,20 +21,40 @@ int main(void)
     sensors_init();
     network_init();
     sleep_timer_init();
+    RainGauge_init();
+    WindSpeed_init();
+    WindDir_init();
 
     sensor_data_t data;
 
     while (1)
     {
-        sensors_read_all(&data);
+        printf("[LOOP] Starting new cycle\n");
 
-        printf("[SENSOR] Reading - Temp: %d.%d°C Humidity: %d.%d%% Light: %d lux\n",
+        sensors_read_all(&data);
+        printf("[LOOP] Sensors read\n");
+
+        char rainnum[10];
+        char wind_speed_num[10];
+        dtostrf(data.rain, 6, 2, rainnum);
+        dtostrf(data.wind_speed, 6, 2, wind_speed_num);
+        printf("[SENSOR] Reading - Temp: %d.%dC Humidity: %d.%d Lux: %d Rainfall: %s Windspeed: %s WindClicks: %lu Winddirection: %u (%s)\n",
                data.temp_i, data.temp_d,
                data.hum_i, data.hum_d,
-               data.light);
+               data.light,
+               rainnum,
+               wind_speed_num,
+               data.wind_clicks,
+               data.wind_dir,
+               WindDir_getText());
 
+        printf("[LOOP] About to send data\n");
         send_sensor_data(&data);
+        printf("[LOOP] Data sent\n");
 
+        printf("[LOOP] About to sleep\n");
         sleep_interval();
+        printf("[LOOP] Woke up from sleep\n");
     }
 }
+// Winddirection: %d \n

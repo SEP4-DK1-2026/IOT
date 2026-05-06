@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <util/delay.h>
+#include <stdlib.h> 
 
 static char tcp_rx_buffer[700];
 static volatile bool tcp_received = false;
@@ -10,7 +11,6 @@ static volatile bool tcp_received = false;
 // ================= CALLBACK =================
 static void tcp_callback(void)
 {
-    //printf("\n--- SERVER RESPONSE ---\n%s\n------------------------\n", tcp_rx_buffer);
     tcp_received = true;
 }
 
@@ -51,16 +51,24 @@ void send_sensor_data(sensor_data_t *data)
 
     // ================= JSON =================
     char json[128];
+    char rain_num[10];
+    char wind_speed_num[10];
+    
+dtostrf(data->rain, 6, 2,rain_num);
+dtostrf(data->wind_speed,6,2,wind_speed_num);
     sprintf(json,
-            "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%d}",
+            "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%d, \"rainfall\":%s, \"windspeed\":%s, \"winddir\":%d}",
             data->temp_i, data->temp_d,
             data->hum_i, data->hum_d,
-            data->light);
+            data->light,
+            rain_num,
+            wind_speed_num,
+            data->wind_dir);
 
     // ================= HTTP REQUEST =================
     char request[300];
     sprintf(request,
-            "POST /09064a39-2237-40ed-8c7c-b888b02db8a4 HTTP/1.1\r\n"
+            "POST /b2e0de2e-1dbe-4a3c-b7ee-50214c4d4c05 HTTP/1.1\r\n"
             "Host: webhook.site\r\n"
             "Content-Type: application/json\r\n"
             "Content-Length: %d\r\n"
@@ -83,7 +91,7 @@ void send_sensor_data(sensor_data_t *data)
     // ================= WAIT FOR RESPONSE =================
     int timeout = 0;
 
-    while (!tcp_received && timeout < 50)
+    while (!tcp_received && timeout < 20) // Vent 5 sekunder (20 * 250ms)
     {
         _delay_ms(100);
         timeout++;
@@ -91,7 +99,7 @@ void send_sensor_data(sensor_data_t *data)
 
     if (!tcp_received)
     {
-        printf("[NETWORK/HTTP] WARNING - Server response timeout (waited 5s, got no reply)\n");
+        printf("[NETWORK/HTTP] WARNING - Server response timeout (waited 2s, got no reply)\n");
     }
     else
 {
