@@ -11,6 +11,7 @@
  **********************************************/
 #include "adc.h"
 #include <stdint.h>
+#include <math.h>
 
 // Initialize the light sensor. This is a wrapper around adc_create()
 // for the specific channel and reference used by the light sensor.
