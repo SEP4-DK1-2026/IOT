@@ -12,6 +12,9 @@
 void sensors_init(void)
 {
     light_init();
+    RainGauge_init();
+    WindSpeed_init();
+    WindDir_init();
 }
 
 void sensors_read_all(sensor_data_t *data)
