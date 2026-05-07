@@ -42,7 +42,6 @@ static uint16_t cached_adc = 0;
 static uint8_t cached_index = 0;
 static uint8_t cache_valid = 0;
 
-
 static void WindDir_selectChannel(void)
 {
     ADCSRB |= (1 << MUX5);                                // select ADC8..ADC15 bank
@@ -68,34 +67,15 @@ void WindDir_init(void)
         (1 << ADPS0); // prescaler 128
 }
 
-
 uint16_t WindDir_getDeg(void)
 {
     return (uint16_t)((WindDir_getIndex() * 360UL) / WINDDIR_COUNT);
-}
-
-const char *WindDir_getText(void)
-{
-    static const char *dirs[WINDDIR_COUNT] = {
-        "N", "NNE", "NE", "ENE",
-        "E", "ESE", "SE", "SSE",
-        "S", "SSW", "SW", "WSW",
-        "W", "WNW", "NW", "NNW"};
-
-    return dirs[WindDir_getIndex()];
 }
 
 
 void WindDir_resetCache(void)
 {
     cache_valid = 0;
-}
-
-uint16_t WindDir_getCachedADC(void)
-{
-    if (!cache_valid)
-        (void)WindDir_getIndex();
-    return cached_adc;
 }
 
 static uint16_t absDiffU16(uint16_t a, uint16_t b)
@@ -126,9 +106,10 @@ uint16_t WindDir_getADC(void)
 
     // Let MUX settle and discard first conversion
     _delay_us(20);
-    ADCSRA |= (1 << ADSC);
-    while (ADCSRA & (1 << ADSC))
+    ADCSRA |= (1 << ADSC);       // Start en ADC-konvertering
+    while (ADCSRA & (1 << ADSC)) // Venter til hardware sætter denne bit til 0
     {
+        // venter bare
     }
 
     uint32_t sum = 0;
@@ -137,6 +118,7 @@ uint16_t WindDir_getADC(void)
         ADCSRA |= (1 << ADSC);
         while (ADCSRA & (1 << ADSC))
         {
+            // venter bare
         }
         sum += ADC;
         _delay_us(120);
@@ -155,9 +137,7 @@ uint8_t WindDir_getIndex(void)
         // Detect obvious electrical fault (open wire, wrong channel, no GND, short)
         if (adc >= WINDDIR_ADC_STUCK_HIGH || adc <= WINDDIR_ADC_STUCK_LOW)
         {
-            cache_valid = 1;            // "Nu har jeg data"
-            printf("[WARN] winddir invalid raw=%u (stuck high/low), keep index=%u\r\n",
-                   adc, cached_index);
+            cache_valid = 1; // "Nu har jeg data"
             return cached_index;
         }
 
@@ -179,10 +159,7 @@ uint8_t WindDir_getIndex(void)
 
         cached_index = newIndex;
         cache_valid = 1;
-
-        printf("[DEBUG] winddir raw=%u idx=%u ref=%u\r\n",
-               cached_adc, cached_index, windDirADC[cached_index]);
     }
 
-    return cached_index;            // Anden gang: bare returner det gamle
+    return cached_index; // Anden gang: bare returner det gamle
 }
