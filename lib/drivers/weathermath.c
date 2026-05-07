@@ -14,7 +14,7 @@ float LightGetLux(uint16_t rawValue){
 
     if(rawValue > 1023)
     {
-        return -1.0f; //Return error value
+       rawValue = 1023; //ADC max value
     }
 
     if(rawValue == 0)
