@@ -35,14 +35,13 @@ int main(void)
         char wind_speed_num[10];
         dtostrf(data.rain, 6, 2, rainnum);
         dtostrf(data.wind_speed, 6, 2, wind_speed_num);
-        printf("[SENSOR] Reading - Temp: %d.%dC Humidity: %d.%d Lux: %d Rainfall: %s Windspeed: %s Winddirection: %u (%s)\n",
+        printf("[SENSOR] Reading - Temp: %d.%dC Humidity: %d.%d Lux: %d Rainfall: %s Windspeed: %s Winddirection: %u \n",
                data.temp_i, data.temp_d,
                data.hum_i, data.hum_d,
                data.light,
                rainnum,
                wind_speed_num,
-               data.wind_dir,
-               WindDir_getText());
+               data.wind_dir);
 
         printf("[LOOP] About to send data\n");
         send_sensor_data(&data);
