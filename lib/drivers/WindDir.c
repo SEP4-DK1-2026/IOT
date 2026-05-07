@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <util/delay.h>
 
-// #define WINDDIR_CHANNEL 10
 #define WINDDIR_PK_CHANNEL 2
 #define WINDDIR_COUNT 16
 
