@@ -68,7 +68,7 @@ dtostrf(data->wind_speed,6,2,wind_speed_num);
     // ================= HTTP REQUEST =================
     char request[300];
     sprintf(request,
-            "POST /b2e0de2e-1dbe-4a3c-b7ee-50214c4d4c05 HTTP/1.1\r\n"
+            "POST /d0e03901-71fa-4657-80ed-51deaa028eb3 HTTP/1.1\r\n"
             "Host: webhook.site\r\n"
             "Content-Type: application/json\r\n"
             "Content-Length: %d\r\n"

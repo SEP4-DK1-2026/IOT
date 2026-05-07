@@ -29,8 +29,6 @@ void sensors_read_all(sensor_data_t *data)
 
     data->rain = RainGauge_getMM();
 
-
-    data->wind_clicks = WindSpeed_getClicks();
     data->wind_speed = WindSpeed_getKmh(WIND_MEASUREMENT_SECONDS);
 
     data->wind_dir = WindDir_getDeg();
