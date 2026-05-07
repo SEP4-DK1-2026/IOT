@@ -8,7 +8,7 @@
 #include "SharedWeather.h"
 #include <avr/io.h>
 
-#define WIND_MEASUREMENT_SECONDS 16
+#define WIND_MEASUREMENT_SECONDS 896 // 112 * 8 sek = 896 sek = ca 15 min
 void sensors_init(void)
 {
     light_init();
@@ -32,9 +32,4 @@ void sensors_read_all(sensor_data_t *data)
     data->wind_speed = WindSpeed_getKmh(WIND_MEASUREMENT_SECONDS);
 
     data->wind_dir = WindDir_getDeg();
-
-    // i debug: convert ADC -> voltage (mV) — use cached ADC (single sample per cycle) (slet når færdig)
-    uint16_t adc = WindDir_getCachedADC();
-    uint32_t mv = (uint32_t)adc * 5000UL / 1023UL;
-    printf("[DEBUG] ADC=%u, mV=%lu\n", adc, mv);
 }
