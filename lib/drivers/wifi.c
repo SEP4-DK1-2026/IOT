@@ -19,8 +19,6 @@ static void wifi_TCP_callback(uint8_t byte);
 // ================= UART CALLBACK =================
 static void wifi_callback(uint8_t received_byte)
 {
-    // uart_write_byte(UART0_ID, received_byte); // DEBUG til terminal
-
     if (_callback != NULL)
         _callback(received_byte);
 }
