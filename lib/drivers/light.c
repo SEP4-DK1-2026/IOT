@@ -11,7 +11,7 @@
  **********************************************/
 #include "adc.h"
 #include <stdint.h>
-#include <math.h>
+#include "weathermath.h"
 
 // Initialize the light sensor. This is a wrapper around adc_create()
 // for the specific channel and reference used by the light sensor.
@@ -41,22 +41,6 @@ uint16_t light_measure_raw()
 float light_measure_lux()
 {
     uint16_t raw_value = adc_measure(ADC_PK7);
-
-    if(raw_value > 1023)
-    {
-        return -1.0f; //Return error value
-    }
-
-    if(raw_value == 0)
-    {
-        raw_value = 1; //Will probably never be 0, bust just in case. You can never divide by 0
-    }
-
-    float voltage = raw_value * 5.0f / 1023.0f;
-
-    float rldr = (5.0f - voltage) * 10000.0f / voltage;
-
-    float lux = powf((500000.0f / rldr), 1.4f);
-
+    float lux = LightGetLux(raw_value);
     return lux;
 }
