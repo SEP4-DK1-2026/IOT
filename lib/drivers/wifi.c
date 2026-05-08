@@ -5,13 +5,13 @@
 #include <util/delay.h>
 #include "uart.h"
 
-#define WIFI_DATABUFFERSIZE 512
+#define WIFI_DATABUFFERSIZE 128
 
 static uint8_t wifi_dataBuffer[WIFI_DATABUFFERSIZE];
 static uint16_t wifi_dataBufferIndex;
 static uint32_t wifi_baudrate;
 
-static void (*_callback)(uint16_t byte);
+static void (*_callback)(uint8_t byte);
 
 // TCP receive
 static void wifi_TCP_callback(uint8_t byte);
@@ -236,12 +236,12 @@ static void wifi_tx_combined_callback(uint8_t byte)
 }
 
 // ================= SEND TCP =================
-WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint16_t *data, uint16_t length)
+WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint8_t *data, uint16_t length)
 {
     char cmd[32];
 
     // Gem den nuværende callback så vi kan gendanne den senere
-    void (*old_callback)(uint16_t) = _callback;
+    void (*old_callback)(uint8_t) = _callback;
 
     // Skift til command-callback for at fange '>' og 'SEND OK'
     tx_forward_callback = old_callback;
