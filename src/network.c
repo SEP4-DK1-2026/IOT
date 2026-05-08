@@ -40,9 +40,15 @@ void send_sensor_data(sensor_data_t *data)
     tcp_received = false;
     memset(tcp_rx_buffer, 0, sizeof(tcp_rx_buffer));
 
-    if (wifi_command_create_TCP_connection("webhook.site", 80, tcp_callback, tcp_rx_buffer) != WIFI_OK)
+    
+
+     
+    
+    WIFI_ERROR_MESSAGE_t wifierror = wifi_command_create_TCP_connection("20.208.6.0", 80, tcp_callback, tcp_rx_buffer);
+  if (wifierror != WIFI_OK)
     {
-        printf("[NETWORK/TCP] ERROR - Connection setup failed \n");
+        printf("[NETWORK/TCP] ERROR - Connection setup failed: %d \n", wifierror);
+        
         return;
     }
     printf("[NETWORK/TCP] Connected - Ready to send data\n");
@@ -50,14 +56,14 @@ void send_sensor_data(sensor_data_t *data)
     _delay_ms(500);
 
     // ================= JSON =================
-    char json[128];
+    char json[512];
     char rain_num[10];
     char wind_speed_num[10];
     
-dtostrf(data->rain, 6, 2,rain_num);
-dtostrf(data->wind_speed,6,2,wind_speed_num);
+dtostrf(data->rain, 1, 2,rain_num);
+dtostrf(data->wind_speed,1,2,wind_speed_num);
     sprintf(json,
-            "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%d, \"rainfall\":%s, \"windspeed\":%s, \"winddir\":%d}",
+            "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%d, \"rain\":%s, \"wspeed\":%s, \"wdir\":%d}",
             data->temp_i, data->temp_d,
             data->hum_i, data->hum_d,
             data->light,
@@ -66,20 +72,21 @@ dtostrf(data->wind_speed,6,2,wind_speed_num);
             data->wind_dir);
 
     // ================= HTTP REQUEST =================
-    char request[300];
+    char request[512];
     sprintf(request,
-            "POST /b2e0de2e-1dbe-4a3c-b7ee-50214c4d4c05 HTTP/1.1\r\n"
-            "Host: webhook.site\r\n"
-            "Content-Type: application/json\r\n"
-            "Content-Length: %d\r\n"
-            "Connection: close\r\n"
-            "\r\n"
-            "%s",
-            strlen(json),
-            json);
+    "POST /sensor HTTP/1.1\r\n"
+    "Host: iot-weather-api-hyd8ekgcb4hkb2as.switzerlandnorth-01.azurewebsites.net\r\n"
+    "Content-Type: application/json\r\n"
+    "Content-Length: %u\r\n"
+    "Connection: close\r\n"
+    "\r\n"
+    "%s",
+    (unsigned int)strlen(json),
+    json);
 
-    // ================= SEND =================
-    if (wifi_command_TCP_transmit((uint8_t *)request, strlen(request)) != WIFI_OK)
+   
+
+    if (wifi_command_TCP_transmit((uint16_t *)request, strlen(request)) != WIFI_OK)
     {
         printf("[NETWORK/HTTP] ERROR - POST transmission failed (buffer overflow?)\n");
         wifi_command_close_TCP_connection();
@@ -91,7 +98,7 @@ dtostrf(data->wind_speed,6,2,wind_speed_num);
     // ================= WAIT FOR RESPONSE =================
     int timeout = 0;
 
-    while (!tcp_received && timeout < 20) // Vent 5 sekunder (20 * 250ms)
+    while (!tcp_received && timeout < 500) // Vent 5 sekunder (20 * 250ms)
     {
         _delay_ms(100);
         timeout++;
