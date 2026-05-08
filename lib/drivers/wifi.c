@@ -5,13 +5,13 @@
 #include <util/delay.h>
 #include "uart.h"
 
-#define WIFI_DATABUFFERSIZE 128
+#define WIFI_DATABUFFERSIZE 512
 
 static uint8_t wifi_dataBuffer[WIFI_DATABUFFERSIZE];
-static uint8_t wifi_dataBufferIndex;
+static uint16_t wifi_dataBufferIndex;
 static uint32_t wifi_baudrate;
 
-static void (*_callback)(uint8_t byte);
+static void (*_callback)(uint16_t byte);
 
 // TCP receive
 static void wifi_TCP_callback(uint8_t byte);
@@ -19,7 +19,7 @@ static void wifi_TCP_callback(uint8_t byte);
 // ================= UART CALLBACK =================
 static void wifi_callback(uint8_t received_byte)
 {
-    // uart_write_byte(UART0_ID, received_byte); // DEBUG til terminal
+     uart_write_byte(UART0_ID, received_byte); // DEBUG til terminal
 
     if (_callback != NULL)
         _callback(received_byte);
@@ -74,8 +74,10 @@ WIFI_ERROR_MESSAGE_t wifi_command(const char *str, uint16_t timeout_s)
         error = WIFI_ERROR_NOT_RECEIVING;
     else if (strstr((char *)wifi_dataBuffer, "OK") != NULL)
         error = WIFI_OK;
-    else if (strstr((char *)wifi_dataBuffer, "ERROR") != NULL)
+    else if (strstr((char *)wifi_dataBuffer, "ERROR") != NULL){
+        printf("%s \n\r", wifi_dataBuffer);
         error = WIFI_ERROR_RECEIVED_ERROR;
+    }
     else if (strstr((char *)wifi_dataBuffer, "FAIL") != NULL)
         error = WIFI_FAIL;
     else
@@ -110,7 +112,7 @@ WIFI_ERROR_MESSAGE_t wifi_command_set_to_single_Connection()
 
 WIFI_ERROR_MESSAGE_t wifi_command_join_AP(char *ssid, char *password)
 {
-    char cmd[128];
+    char cmd[256];
 
     sprintf(cmd, "AT+CWJAP=\"%s\",\"%s\"", ssid, password);
     return wifi_command(cmd, 20);
@@ -206,9 +208,10 @@ WIFI_ERROR_MESSAGE_t wifi_command_create_TCP_connection(
     received_message_buffer_static_pointer = rx_buffer;
     callback_when_message_received_static = callback;
 
-    char cmd[128];
+    char cmd[256];
     sprintf(cmd, "AT+CIPSTART=\"TCP\",\"%s\",%u", IP, port);
 
+    printf("[DEBUG] CMD: %s\n", cmd);
     WIFI_ERROR_MESSAGE_t err = wifi_command(cmd, 10);
 
     if (err != WIFI_OK)
@@ -234,12 +237,12 @@ static void wifi_tx_combined_callback(uint8_t byte)
 }
 
 // ================= SEND TCP =================
-WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint8_t *data, uint16_t length)
+WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint16_t *data, uint16_t length)
 {
     char cmd[32];
 
     // Gem den nuværende callback så vi kan gendanne den senere
-    void (*old_callback)(uint8_t) = _callback;
+    void (*old_callback)(uint16_t) = _callback;
 
     // Skift til command-callback for at fange '>' og 'SEND OK'
     tx_forward_callback = old_callback;
@@ -252,7 +255,7 @@ WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint8_t *data, uint16_t length)
 
     // vent på >
     uint16_t timeout = 0;
-    while (timeout < 300)
+    while (timeout < 3000)
     {
         _delay_ms(10);
 
@@ -276,7 +279,7 @@ WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint8_t *data, uint16_t length)
 
     // vent på SEND OK
     timeout = 0;
-    while (timeout < 300)
+    while (timeout < 3000)
     {
         _delay_ms(10);
 
