@@ -67,8 +67,8 @@ dtostrf(data->wind_speed,1,2,wind_speed_num);
             data->temp_i, data->temp_d,
             data->hum_i, data->hum_d,
             data->light,
-            12,
-            25,
+            rain_num,
+            wind_speed_num,
             data->wind_dir);
 
     // ================= HTTP REQUEST =================
