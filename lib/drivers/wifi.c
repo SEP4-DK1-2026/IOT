@@ -8,7 +8,7 @@
 #define WIFI_DATABUFFERSIZE 128
 
 static uint8_t wifi_dataBuffer[WIFI_DATABUFFERSIZE];
-static uint8_t wifi_dataBufferIndex;
+static uint16_t wifi_dataBufferIndex;
 static uint32_t wifi_baudrate;
 
 static void (*_callback)(uint8_t byte);
@@ -72,8 +72,9 @@ WIFI_ERROR_MESSAGE_t wifi_command(const char *str, uint16_t timeout_s)
         error = WIFI_ERROR_NOT_RECEIVING;
     else if (strstr((char *)wifi_dataBuffer, "OK") != NULL)
         error = WIFI_OK;
-    else if (strstr((char *)wifi_dataBuffer, "ERROR") != NULL)
+    else if (strstr((char *)wifi_dataBuffer, "ERROR") != NULL){
         error = WIFI_ERROR_RECEIVED_ERROR;
+    }
     else if (strstr((char *)wifi_dataBuffer, "FAIL") != NULL)
         error = WIFI_FAIL;
     else
@@ -108,7 +109,7 @@ WIFI_ERROR_MESSAGE_t wifi_command_set_to_single_Connection()
 
 WIFI_ERROR_MESSAGE_t wifi_command_join_AP(char *ssid, char *password)
 {
-    char cmd[128];
+    char cmd[256];
 
     sprintf(cmd, "AT+CWJAP=\"%s\",\"%s\"", ssid, password);
     return wifi_command(cmd, 20);
@@ -204,9 +205,10 @@ WIFI_ERROR_MESSAGE_t wifi_command_create_TCP_connection(
     received_message_buffer_static_pointer = rx_buffer;
     callback_when_message_received_static = callback;
 
-    char cmd[128];
+    char cmd[256];
     sprintf(cmd, "AT+CIPSTART=\"TCP\",\"%s\",%u", IP, port);
 
+    
     WIFI_ERROR_MESSAGE_t err = wifi_command(cmd, 10);
 
     if (err != WIFI_OK)
@@ -250,7 +252,7 @@ WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint8_t *data, uint16_t length)
 
     // vent på >
     uint16_t timeout = 0;
-    while (timeout < 300)
+    while (timeout < 3000)
     {
         _delay_ms(10);
 
@@ -273,7 +275,7 @@ WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint8_t *data, uint16_t length)
 
     // vent på SEND OK
     timeout = 0;
-    while (timeout < 300)
+    while (timeout < 3000)
     {
         _delay_ms(10);
 

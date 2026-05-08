@@ -51,35 +51,25 @@ void send_sensor_data(sensor_data_t *data)
     tcp_received = false;
     memset(tcp_rx_buffer, 0, sizeof(tcp_rx_buffer));
 
-    int attempts = 0;
-    while (wifi_command_create_TCP_connection("webhook.site", 80, tcp_callback, tcp_rx_buffer) != WIFI_OK)
+    WIFI_ERROR_MESSAGE_t wifierror = wifi_command_create_TCP_connection("20.208.6.0", 80, tcp_callback, tcp_rx_buffer);
+  if (wifierror != WIFI_OK)
     {
-        _delay_ms(500);
-        attempts++;
-
-        if (attempts >= 10)
-        {
-            break;
-        }
-    }
-
-    if (attempts >= 10)
-    {
-
+        printf("[NETWORK/TCP] ERROR - Connection setup failed: %d \n", wifierror);
+        
         return;
     }
 
     _delay_ms(500);
 
     // ================= JSON =================
-    char json[128];
+    char json[512];
     char rain_num[10];
     char wind_speed_num[10];
 
     dtostrf(data->rain, 6, 2, rain_num);
     dtostrf(data->wind_speed, 6, 2, wind_speed_num);
     sprintf(json,
-            "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%d, \"rainfall\":%s, \"windspeed\":%s, \"winddir\":%d}",
+            "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%d, \"rain\":%s, \"wspeed\":%s, \"wdir\":%d}",
             data->temp_i, data->temp_d,
             data->hum_i, data->hum_d,
             data->light,
@@ -88,19 +78,20 @@ void send_sensor_data(sensor_data_t *data)
             data->wind_dir);
 
     // ================= HTTP REQUEST =================
-    char request[300];
+    char request[512];
     sprintf(request,
-            "POST /d0e03901-71fa-4657-80ed-51deaa028eb3 HTTP/1.1\r\n"
-            "Host: webhook.site\r\n"
-            "Content-Type: application/json\r\n"
-            "Content-Length: %d\r\n"
-            "Connection: close\r\n"
-            "\r\n"
-            "%s",
-            strlen(json),
-            json);
+    "POST /sensor HTTP/1.1\r\n"
+    "Host: iot-weather-api-hyd8ekgcb4hkb2as.switzerlandnorth-01.azurewebsites.net\r\n"
+    "Content-Type: application/json\r\n"
+    "Content-Length: %u\r\n"
+    "Connection: close\r\n"
+    "\r\n"
+    "%s",
+    (unsigned int)strlen(json),
+    json);
 
-    // ================= SEND =================
+   
+
     if (wifi_command_TCP_transmit((uint8_t *)request, strlen(request)) != WIFI_OK)
     {
         wifi_command_close_TCP_connection();
@@ -110,7 +101,7 @@ void send_sensor_data(sensor_data_t *data)
     // ================= WAIT FOR RESPONSE =================
     int timeout = 0;
 
-    while (!tcp_received && timeout < 20) // Vent 5 sekunder (20 * 250ms)
+    while (!tcp_received && timeout < 500) // Vent 5 sekunder (20 * 250ms)
     {
         _delay_ms(100);
         timeout++;
