@@ -66,8 +66,8 @@ void send_sensor_data(sensor_data_t *data)
     char rain_num[10];
     char wind_speed_num[10];
 
-    dtostrf(data->rain, 6, 2, rain_num);
-    dtostrf(data->wind_speed, 6, 2, wind_speed_num);
+    dtostrf(data->rain, 1, 2, rain_num);
+    dtostrf(data->wind_speed, 1, 2, wind_speed_num);
     sprintf(json,
             "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%d, \"rain\":%s, \"wspeed\":%s, \"wdir\":%d}",
             data->temp_i, data->temp_d,
