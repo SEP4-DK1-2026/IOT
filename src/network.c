@@ -27,24 +27,19 @@ void network_init(void)
 
     while (wifi_command_join_AP("Namnam", "Benjamin") != WIFI_OK)
     {
-        printf("[NETWORK/WiFi] ERROR - Failed to join 'Namnam'\n");
         _delay_ms(2000);
         attempts++;
 
         if (attempts >= 10)
         {
-            printf("[NETWORK/WiFi] ERROR - Failed to join WiFi after 10 attempts, giving up gg\n");
             break;
         }
     }
 
     if (attempts >= 10)
     {
-        printf("[NETWORK/TCP] ERROR - Failed to establish TCP connection after 10 attempts, giving up gg\n");
         return; // VIGTIG: Giv op her!
     }
-
-    printf("[NETWORK/WiFi] Connected successfully: Namnam\n");
 
     wifi_command_set_to_single_Connection();
 }
@@ -58,24 +53,20 @@ void send_sensor_data(sensor_data_t *data)
     int attempts = 0;
     while (wifi_command_create_TCP_connection("webhook.site", 80, tcp_callback, tcp_rx_buffer) != WIFI_OK)
     {
-        printf("[NETWORK/TCP] ERROR - Connection setup failed \n");
         _delay_ms(500);
         attempts++;
 
         if (attempts >= 10)
         {
-            printf("[NETWORK/TCP] ERROR - Failed to establish TCP connection after 10 attempts, giving up gg\n");
             break;
         }
     }
 
     if (attempts >= 10)
     {
-        printf("[NETWORK/WiFi] FATAL - Could not connect\n");
+
         return;
     }
-    
-    printf("[NETWORK/TCP] Connected - Ready to send data\n");
 
     _delay_ms(500);
 
@@ -111,12 +102,9 @@ void send_sensor_data(sensor_data_t *data)
     // ================= SEND =================
     if (wifi_command_TCP_transmit((uint8_t *)request, strlen(request)) != WIFI_OK)
     {
-        printf("[NETWORK/HTTP] ERROR - POST transmission failed (buffer overflow?)\n");
         wifi_command_close_TCP_connection();
         return;
     }
-
-    printf("[NETWORK/HTTP] SUCCESS - POST sent (waiting for response)\n");
 
     // ================= WAIT FOR RESPONSE =================
     int timeout = 0;
@@ -127,17 +115,6 @@ void send_sensor_data(sensor_data_t *data)
         timeout++;
     }
 
-    if (!tcp_received)
-    {
-        printf("[NETWORK/HTTP] WARNING - Server response timeout (waited 2s, got no reply)\n");
-    }
-    else
-    {
-        printf("[NETWORK/HTTP] SUCCESS - Response received\n");
-    }
-
     // ================= CLOSE =================
     wifi_command_close_TCP_connection();
-
-    printf("[NETWORK/HTTP] SUCCESS - Data transmitted and connection closed\n");
 }

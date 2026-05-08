@@ -265,7 +265,6 @@ WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint8_t *data, uint16_t length)
         // Gendan tidligere callback før vi returnerer
         _callback = old_callback;
         tx_forward_callback = NULL;
-        printf("[DRIVER/WiFi] ERROR - Send prompt timeout (> not received after 3.0s)\n");
         return WIFI_FAIL;
     }
 
@@ -280,7 +279,6 @@ WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint8_t *data, uint16_t length)
 
         if (strstr((char *)wifi_dataBuffer, "SEND OK") != NULL)
         {
-            printf("[DRIVER/WiFi] Transmission confirmed - ESP8266 received data\n");
             break;
         }
 
