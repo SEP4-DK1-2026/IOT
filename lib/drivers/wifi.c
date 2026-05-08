@@ -19,7 +19,7 @@ static void wifi_TCP_callback(uint8_t byte);
 // ================= UART CALLBACK =================
 static void wifi_callback(uint8_t received_byte)
 {
-     uart_write_byte(UART0_ID, received_byte); // DEBUG til terminal
+    // uart_write_byte(UART0_ID, received_byte); // DEBUG til terminal
 
     if (_callback != NULL)
         _callback(received_byte);
@@ -75,7 +75,6 @@ WIFI_ERROR_MESSAGE_t wifi_command(const char *str, uint16_t timeout_s)
     else if (strstr((char *)wifi_dataBuffer, "OK") != NULL)
         error = WIFI_OK;
     else if (strstr((char *)wifi_dataBuffer, "ERROR") != NULL){
-        printf("%s \n\r", wifi_dataBuffer);
         error = WIFI_ERROR_RECEIVED_ERROR;
     }
     else if (strstr((char *)wifi_dataBuffer, "FAIL") != NULL)
@@ -211,7 +210,7 @@ WIFI_ERROR_MESSAGE_t wifi_command_create_TCP_connection(
     char cmd[256];
     sprintf(cmd, "AT+CIPSTART=\"TCP\",\"%s\",%u", IP, port);
 
-    printf("[DEBUG] CMD: %s\n", cmd);
+    
     WIFI_ERROR_MESSAGE_t err = wifi_command(cmd, 10);
 
     if (err != WIFI_OK)

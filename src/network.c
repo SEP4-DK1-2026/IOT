@@ -42,21 +42,7 @@ void send_sensor_data(sensor_data_t *data)
 
     
 
-     // ================= DNS TEST =================
-    printf("[NETWORK] Testing DNS lookup...\n");
-
-    WIFI_ERROR_MESSAGE_t dns_test =
-        wifi_command_AT(
-            "AT+CIPDOMAIN=\"iot-container.yellowglacier-07102b9a.switzerlandnorth.azurecontainerapps.io\"",
-            10);
-
-    if (dns_test != WIFI_OK)
-    {
-        printf("[NETWORK] ERROR - DNS lookup failed: %d\n", dns_test);
-        return;
-    }
-
-    printf("[NETWORK] DNS lookup success\n");
+     
     
     WIFI_ERROR_MESSAGE_t wifierror = wifi_command_create_TCP_connection("20.208.6.0", 80, tcp_callback, tcp_rx_buffer);
   if (wifierror != WIFI_OK)
@@ -98,11 +84,7 @@ dtostrf(data->wind_speed,1,2,wind_speed_num);
     (unsigned int)strlen(json),
     json);
 
-    // ================= SEND =================
-printf("\n========== HTTP REQUEST ==========\n");
-printf("%s\n", request);
-printf("==================================\n");
-printf("REQUEST LENGTH: %u\n", strlen(request));
+   
 
     if (wifi_command_TCP_transmit((uint16_t *)request, strlen(request)) != WIFI_OK)
     {
