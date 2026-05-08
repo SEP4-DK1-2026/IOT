@@ -104,7 +104,7 @@ WIFI_ERROR_MESSAGE_t wifi_command_create_TCP_connection(char *IP, uint16_t port,
  * @param length Length of the data to transmit.
  * @return WIFI_ERROR_MESSAGE_t Error message based on the response from the module.
  */
-WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint16_t *data, uint16_t length);
+WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint8_t *data, uint16_t length);
 
 /**
  * @brief Disconnect from the current Access Point (AP).

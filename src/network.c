@@ -86,7 +86,7 @@ dtostrf(data->wind_speed,1,2,wind_speed_num);
 
    
 
-    if (wifi_command_TCP_transmit((uint16_t *)request, strlen(request)) != WIFI_OK)
+    if (wifi_command_TCP_transmit((uint8_t *)request, strlen(request)) != WIFI_OK)
     {
         printf("[NETWORK/HTTP] ERROR - POST transmission failed (buffer overflow?)\n");
         wifi_command_close_TCP_connection();
