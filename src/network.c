@@ -4,6 +4,7 @@
 #include <string.h>
 #include <util/delay.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 static char tcp_rx_buffer[700];
 static volatile bool tcp_received = false;

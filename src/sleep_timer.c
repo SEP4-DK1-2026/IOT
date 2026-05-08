@@ -4,7 +4,6 @@
 #include "sleep_timer.h"
 #include <avr/interrupt.h>
 #include <stdio.h>
-#include <uart_stdio.h>
 
 // Volatile kan ændre sig uden for det normale flow. Den bruger nemlig ISR.
 volatile uint16_t wakeups = 0;

@@ -2,7 +2,6 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 #include <stdio.h>
-#include <uart_stdio.h>
 #include "sleep_timer.h"
 #include <stdlib.h>
 
@@ -15,7 +14,6 @@
 int main(void)
 {
     sei();
-    uart_stdio_init(115200);
 
     sensors_init();
     network_init();
