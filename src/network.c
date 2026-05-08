@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <util/delay.h>
-#include <stdlib.h> 
+#include <stdlib.h>
+#include <stdbool.h>
 
 static char tcp_rx_buffer[700];
 static volatile bool tcp_received = false;
@@ -23,13 +24,23 @@ void network_init(void)
     wifi_command_disable_echo();
     wifi_command_set_mode_to_1();
 
-    if (wifi_command_join_AP("Namnam", "Benjamin") != WIFI_OK)
+    int attempts = 0;
+
+    while (wifi_command_join_AP("Namnam", "Benjamin") != WIFI_OK)
     {
-        printf("[NETWORK/WiFi] ERROR - Failed to join 'Namnam'\n");
-        return;
+        _delay_ms(2000);
+        attempts++;
+
+        if (attempts >= 10)
+        {
+            break;
+        }
     }
 
-    printf("[NETWORK/WiFi] Connected successfully: Namnam\n");
+    if (attempts >= 10)
+    {
+        return; // VIGTIG: Giv op her!
+    }
 
     wifi_command_set_to_single_Connection();
 }
@@ -40,10 +51,6 @@ void send_sensor_data(sensor_data_t *data)
     tcp_received = false;
     memset(tcp_rx_buffer, 0, sizeof(tcp_rx_buffer));
 
-    
-
-     
-    
     WIFI_ERROR_MESSAGE_t wifierror = wifi_command_create_TCP_connection("20.208.6.0", 80, tcp_callback, tcp_rx_buffer);
   if (wifierror != WIFI_OK)
     {
@@ -51,7 +58,6 @@ void send_sensor_data(sensor_data_t *data)
         
         return;
     }
-    printf("[NETWORK/TCP] Connected - Ready to send data\n");
 
     _delay_ms(500);
 
@@ -59,9 +65,9 @@ void send_sensor_data(sensor_data_t *data)
     char json[512];
     char rain_num[10];
     char wind_speed_num[10];
-    
-dtostrf(data->rain, 1, 2,rain_num);
-dtostrf(data->wind_speed,1,2,wind_speed_num);
+
+    dtostrf(data->rain, 6, 2, rain_num);
+    dtostrf(data->wind_speed, 6, 2, wind_speed_num);
     sprintf(json,
             "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%d, \"rain\":%s, \"wspeed\":%s, \"wdir\":%d}",
             data->temp_i, data->temp_d,
@@ -88,12 +94,9 @@ dtostrf(data->wind_speed,1,2,wind_speed_num);
 
     if (wifi_command_TCP_transmit((uint8_t *)request, strlen(request)) != WIFI_OK)
     {
-        printf("[NETWORK/HTTP] ERROR - POST transmission failed (buffer overflow?)\n");
         wifi_command_close_TCP_connection();
         return;
     }
-
-    printf("[NETWORK/HTTP] SUCCESS - POST sent (waiting for response)\n");
 
     // ================= WAIT FOR RESPONSE =================
     int timeout = 0;
@@ -104,17 +107,6 @@ dtostrf(data->wind_speed,1,2,wind_speed_num);
         timeout++;
     }
 
-    if (!tcp_received)
-    {
-        printf("[NETWORK/HTTP] WARNING - Server response timeout (waited 2s, got no reply)\n");
-    }
-    else
-{
-    printf("[NETWORK/HTTP] SUCCESS - Response received\n");
-}
-
     // ================= CLOSE =================
     wifi_command_close_TCP_connection();
-
-    printf("[NETWORK/HTTP] SUCCESS - Data transmitted and connection closed\n");
 }
