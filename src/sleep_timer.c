@@ -39,8 +39,9 @@ void sleep_interval(void)
 {
     wakeups = 0;
 
-    while (wakeups != 2) // 112 * 8 sek = 896 sek = ca 15 min
+    while (wakeups != 450) // 450 * 8 sek = 3600 sek = 60 min
     {
+        printf("[SLEEP] Entering low-power mode (cycle %u/112)\n", wakeups);
         uart0_wait_tx_complete();
 
         set_sleep_mode(SLEEP_MODE_PWR_DOWN);
