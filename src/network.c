@@ -80,14 +80,16 @@ void send_sensor_data(sensor_data_t *data)
      char json[512];
     char rain_num[10];
     char wind_speed_num[10];
+    char light_num[15];
 
     dtostrf(data->rain, 1, 2, rain_num);
     dtostrf(data->wind_speed, 1, 2, wind_speed_num);
+    dtostrf(data->light, 1, 2, light_num);
     sprintf(json,
-            "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%d, \"rain\":%s, \"wspeed\":%s, \"wdir\":%d}",
+            "{\"temp\":%d.%d,\"hum\":%d.%d,\"light\":%s, \"rain\":%s, \"wspeed\":%s, \"wdir\":%d}",
             data->temp_i, data->temp_d,
             data->hum_i, data->hum_d,
-            data->light,
+            light_num,
             rain_num,
             wind_speed_num,
             data->wind_dir);
@@ -114,7 +116,7 @@ void send_sensor_data(sensor_data_t *data)
         return;
     }
 
-    printf("[NETWORK/HTTP] SUCCESS - POST sent (waiting for response)\n");
+    printf("[NETWORK/HTTP] SUCCESS - POST sent (waiting for response) %d %d\n", strlen(request), strlen(json));
 
     // ================= WAIT FOR RESPONSE =================
     int timeout = 0;

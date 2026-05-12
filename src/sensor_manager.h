@@ -6,7 +6,7 @@ typedef struct {
     uint8_t temp_d;
     uint8_t hum_i;
     uint8_t hum_d;
-    uint16_t light;
+    float light;
     float rain;
     float wind_speed;
     uint16_t wind_dir;
