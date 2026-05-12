@@ -252,7 +252,7 @@ WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint8_t *data, uint16_t length)
 
     // vent på >
     uint16_t timeout = 0;
-    while (timeout < 3000)
+    while (timeout < 300)
     {
         _delay_ms(10);
 
@@ -275,7 +275,7 @@ WIFI_ERROR_MESSAGE_t wifi_command_TCP_transmit(uint8_t *data, uint16_t length)
 
     // vent på SEND OK
     timeout = 0;
-    while (timeout < 3000)
+    while (timeout < 300)
     {
         _delay_ms(10);
 
