@@ -21,20 +21,17 @@ int main(void)
     network_init();
     sleep_timer_init();
 
-    _delay_ms(1500000);
+    //_delay_ms(1500000);
 
     sensor_data_t data;
 
     while (1)
     {
-
         sensors_read_all(&data);
 
     
-
         send_sensor_data(&data);
 
         sleep_interval();
     }
 }
-// Winddirection: %d \n

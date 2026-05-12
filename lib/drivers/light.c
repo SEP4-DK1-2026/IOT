@@ -40,7 +40,7 @@ uint16_t light_measure_raw()
 
 float light_measure_lux()
 {
-    uint16_t raw_value = adc_measure(ADC_PK7);
+    uint16_t raw_value = light_measure_raw();
     float lux = LightGetLux(raw_value);
     return lux;
 }

@@ -24,7 +24,7 @@ void sleep_timer_init(void)
 
     // WDIE = Watchdog Interrupt Enable & Watchdog timer. WDP0 = 16ms, WDP1 = 32ms, WDP2 = 64ms, WDP3 = 128ms.
     // interrupt mode, ca 8 sek
-    WDTCSR = (1 << WDIE) | (1 << WDP3);
+    WDTCSR = (1 << WDIE) | (1 << WDP3) | (1<<WDP0);
 }
 
 static void uart0_wait_tx_complete(void)
@@ -39,7 +39,9 @@ void sleep_interval(void)
 {
     wakeups = 0;
 
-    while (wakeups != 450) // 450 * 8 sek = 3600 sek = 60 min
+    while (wakeups != 397) // 397 * 8 sek = 3176 sek = ca 53 min ogås fordi vores 
+    // program køre andre ting 
+    // i baggrunden tager det ca 13% mere tid at løbe watchdog timeren
     {
         printf("[SLEEP] Entering low-power mode (cycle %u/112)\n", wakeups);
         uart0_wait_tx_complete();
