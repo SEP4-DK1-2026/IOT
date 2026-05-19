@@ -2,11 +2,9 @@
  * RainGauge.c
  *  Rain gauge sensor implementation
  *
- *  Author:  [DIT NAVN]
+ *  Author:  SEP4DK1
  *  Date:    2026
  *  Project: SPE4_API
- *  Revision history:
- * 			 0.1 - Initial version ([DIT NAVN])
  **********************************************/
 
 #include "RainGauge.h"
