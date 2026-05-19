@@ -1,3 +1,14 @@
+/***********************************************
+ * RainGauge.c
+ *  Rain gauge sensor implementation
+ *
+ *  Author:  [DIT NAVN]
+ *  Date:    2026
+ *  Project: SPE4_API
+ *  Revision history:
+ * 			 0.1 - Initial version ([DIT NAVN])
+ **********************************************/
+
 #include "RainGauge.h"
 #include "SharedWeather.h"
 #include <avr/io.h>
@@ -8,23 +19,29 @@ float RainGetMM(int tips);
 
 void RainGauge_init(void)
 {
+    /* Set PK0 as input */
     DDRK &= ~(1 << PK0);
+    /* Enable pull-up resistor */
     PORTK |= (1 << PK0);
-    /* Ensure digital input enabled on PK0 (ADC8) so PCINT works */
+
+    /* Enable digital input on PK0 */
     DIDR2 &= ~(1 << ADC8D);
 
-    /* Sync edge detector with the actual pin level to avoid false startup tip. */
+    /* Read current pin state to avoid false startup trigger */
     rg_last = (PINK & (1 << PK0)) ? 1 : 0;
 
-    /* Clear pending pin-change interrupt flag before enabling mask. */
+    /* Clear pending interrupt flag */
     PCIFR |= (1 << PCIF2);
-
+    /* Enable pin change interrupt */
     PCICR |= (1 << PCIE2);
+
+    /* Enable interrupt on PK0 */
     PCMSK2 |= (1 << PCINT16);
 }
 
 void RainGauge_reset(void)
 {
+    /* Disable interrupts while resetting counter */
     cli();
     rg_tips = 0;
     sei();
@@ -33,6 +50,8 @@ void RainGauge_reset(void)
 unsigned long RainGauge_getTips(void)
 {
     unsigned long t;
+
+    /* Read shared variable safely */
     cli();
     t = rg_tips;
     sei();
@@ -41,7 +60,11 @@ unsigned long RainGauge_getTips(void)
 
 float RainGauge_getMM(void)
 {
+    /* Convert tips to millimeters */
     float mm = RainGetMM(RainGauge_getTips());
+
+    /* Reset counter after reading */
     RainGauge_reset();
+
     return mm;
 }

@@ -1,3 +1,12 @@
+/***********************************************
+ * WindDir.c
+ *  Wind direction sensor implementation
+ *
+ *  Author:  Sep4DK1
+ *  Date:    2026
+ *  Project: SPE4_API
+ **********************************************/
+
 #include "WindDir.h"
 #include <avr/io.h>
 #include <stdint.h>
@@ -14,11 +23,14 @@
 #define WINDDIR_FILTER_SAMPLES 7
 #define WINDDIR_HYSTERESIS 0
 
+/* Internal helper functions */
+
 // Forward declarations for internal helpers
 static uint16_t absDiffU16(uint16_t a, uint16_t b);
 static uint8_t WindDir_findNearestIndex(uint16_t adc);
 static uint8_t WindDir_getIndex(void);
 
+/* ADC values for each wind direction */
 static const uint16_t windDirADC[WINDDIR_COUNT] = {
     238, // 0°
     617, // 22.5°
@@ -38,51 +50,62 @@ static const uint16_t windDirADC[WINDDIR_COUNT] = {
     321  // 337.5°
 };
 
+/* Cached values */
 static uint16_t cached_adc = 0;
 static uint8_t cached_index = 0;
 static uint8_t cache_valid = 0;
 
+/* Select ADC channel */
 static void WindDir_selectChannel(void)
 {
-    ADCSRB |= (1 << MUX5);                                // select ADC8..ADC15 bank
-    ADMUX = (ADMUX & 0xE0) | (WINDDIR_PK_CHANNEL & 0x07); // MUX[4:0] = 0..7
+    ADCSRB |= (1 << MUX5);
+    ADMUX = (ADMUX & 0xE0) | (WINDDIR_PK_CHANNEL & 0x07);
 }
 
 void WindDir_init(void)
 {
-    // PK2 / ADC10 as analog input, no internal pull-up
+    /* Set PK2 as analog input */
     DDRK &= ~(1 << PK2);
+
+    /* Disable pull-up resistor */
     PORTK &= ~(1 << PK2);
 
-    ADMUX = (1 << REFS0); // AVCC reference
+    /* Use AVCC as reference */
+    ADMUX = (1 << REFS0);
 
-    DIDR2 |= (1 << ADC10D); // disable digital input
+    /* Disable digital input on ADC10 */
+    DIDR2 |= (1 << ADC10D);
 
-    ADCSRB &= ~(1 << MUX5); // clean state
+    /* Reset MUX5 */
+    ADCSRB &= ~(1 << MUX5);
 
+    /* Enable ADC with prescaler 128 */
     ADCSRA =
-        (1 << ADEN) | // enable ADC
+        (1 << ADEN) |
         (1 << ADPS2) |
         (1 << ADPS1) |
-        (1 << ADPS0); // prescaler 128
+        (1 << ADPS0);
 }
 
 uint16_t WindDir_getDeg(void)
 {
+    /* Convert direction index to degrees */
     return (uint16_t)((WindDir_getIndex() * 360UL) / WINDDIR_COUNT);
 }
 
-
 void WindDir_resetCache(void)
 {
+    /* Clear cached value */
     cache_valid = 0;
 }
 
+/* Get absolute difference between two values */
 static uint16_t absDiffU16(uint16_t a, uint16_t b)
 {
     return (a > b) ? (a - b) : (b - a);
 }
 
+/* Find closest direction index */
 static uint8_t WindDir_findNearestIndex(uint16_t adc)
 {
     uint16_t bestDiff = 0xFFFF;
@@ -102,23 +125,26 @@ static uint8_t WindDir_findNearestIndex(uint16_t adc)
 
 uint16_t WindDir_getADC(void)
 {
+    /* Select ADC channel */
     WindDir_selectChannel();
 
-    // Let MUX settle and discard first conversion
+    /* Let ADC settle */
     _delay_us(20);
-    ADCSRA |= (1 << ADSC);       // Start en ADC-konvertering
-    while (ADCSRA & (1 << ADSC)) // Venter til hardware sætter denne bit til 0
+    /* Discard first ADC reading */
+    ADCSRA |= (1 << ADSC);
+
+    while (ADCSRA & (1 << ADSC))
     {
-        // venter bare
     }
 
     uint32_t sum = 0;
+
+    /* Average multiple ADC samples */
     for (uint8_t i = 0; i < WINDDIR_FILTER_SAMPLES; i++)
     {
         ADCSRA |= (1 << ADSC);
         while (ADCSRA & (1 << ADSC))
         {
-            // venter bare
         }
         sum += ADC;
         _delay_us(120);
@@ -129,19 +155,21 @@ uint16_t WindDir_getADC(void)
 
 uint8_t WindDir_getIndex(void)
 {
-    if (!cache_valid) // Første gang: cache_valid = 0
+
+    /* Only read ADC if cache is invalid */
+    if (!cache_valid)
     {
-        uint16_t adc = WindDir_getADC(); // ← Læs fra ADC
+        uint16_t adc = WindDir_getADC();
         cached_adc = adc;
 
-        // Detect obvious electrical fault (open wire, wrong channel, no GND, short)
+        /* Detect obvious electrical fault (open wire, wrong channel, no GND, short) */
         if (adc >= WINDDIR_ADC_STUCK_HIGH || adc <= WINDDIR_ADC_STUCK_LOW)
         {
-            cache_valid = 1; // "Nu har jeg data"
+            cache_valid = 1;
             return cached_index;
         }
 
-        // Clamp to calibrated span before nearest-match
+        /* Clamp to calibrated span before nearest-match*/
         if (adc < WINDDIR_ADC_MIN_VALID)
             adc = WINDDIR_ADC_MIN_VALID;
         if (adc > WINDDIR_ADC_MAX_VALID)
@@ -161,5 +189,6 @@ uint8_t WindDir_getIndex(void)
         cache_valid = 1;
     }
 
-    return cached_index; // Anden gang: bare returner det gamle
+    /* Return cached direction */
+    return cached_index;
 }
