@@ -1,3 +1,11 @@
+/***********************************************
+ *  SharedWeather.h
+ *  Interface for setup for interrupt pins 
+ * 
+ *  Author:  Sep4DK1
+ *  Date:    2026
+ *  Project: SPE4_API
+ **********************************************/
 #pragma once
 #include <stdint.h>
 

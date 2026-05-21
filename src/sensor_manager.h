@@ -1,3 +1,11 @@
+/***********************************************
+ *  Sensor_manager.h
+ *  Sensor Data gather interface
+ * 
+ *  Author:  Sep4DK1
+ *  Date:    2026
+ *  Project: Sep4DK1
+ **********************************************/
 #pragma once
 #include <stdint.h>
 

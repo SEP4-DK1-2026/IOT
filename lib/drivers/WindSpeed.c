@@ -15,7 +15,7 @@
 
 float WindGetKmh(float tips, float seconds);
 
-// Windspeed og raingauge init er næsten ens kodemæssigt, kan man lave en fælles funktion?
+
 void WindSpeed_init(void)
 {
     /* Set PK1 as input */

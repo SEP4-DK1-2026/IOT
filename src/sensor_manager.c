@@ -1,3 +1,11 @@
+/***********************************************
+ *  Sensor_manager.c
+ *  Sensor Data gather
+ * 
+ *  Author:  Sep4DK1
+ *  Date:    2026
+ *  Project: Sep4DK1
+ **********************************************/
 #include "sensor_manager.h"
 #include "dht11.h"
 #include "light.h"
@@ -19,7 +27,6 @@ void sensors_init(void)
 
 void sensors_read_all(sensor_data_t *data)
 {
-    // Uden denne bliver cache-flaget aldrit resattet?, så vindretningen bliver kun læst en gang, hvorefter den gentages forevigt ggwpnigga
     WindDir_resetCache();
 
     dht11_get(&data->hum_i, &data->hum_d,
