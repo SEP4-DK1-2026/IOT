@@ -1,3 +1,12 @@
+/***********************************************
+ *  Main.c
+ *  Main function of the project 
+ * 
+ *  Author:  Sep4DK1
+ *  Date:    2026
+ *  Project: SPE4_API
+ **********************************************/
+
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
